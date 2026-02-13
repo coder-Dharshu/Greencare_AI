@@ -1,0 +1,8 @@
+{
+  "name": "FloraMind - AI Plant Care",
+  "description": "Your intelligent gardening companion. Get personalized plant recommendations, detect diseases using AI, and manage your garden with timely care reminders.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
