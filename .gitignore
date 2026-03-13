@@ -18,3 +18,16 @@ build/
 **/.idea/
 .vscode/
 **/.vscode/
+
+# Datasets and Models
+*.csv
+**/*.csv
+*.pt
+*.pkl
+*.h5
+checkpoints/
+**/checkpoints/
+lightning_logs/
+**/lightning_logs/
+.pt_tmp/
+**/.pt_tmp/
