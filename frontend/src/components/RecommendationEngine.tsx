@@ -60,8 +60,6 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({ onAd
     <div className="max-w-2xl mx-auto px-4 py-8">
       <h2 className="text-2xl font-bold text-slate-800 mb-2">✨ Plant Recommendations</h2>
       <p className="text-slate-500 text-sm mb-6">Get AI-powered suggestions tailored to your space</p>
-
-      {/* Form */}
       <div className="glass-panel rounded-2xl p-5 mb-6 custom-shadow">
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
@@ -125,8 +123,6 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({ onAd
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-red-600 text-sm mb-4">⚠️ {error}</div>
       )}
-
-      {/* Results */}
       {results.length > 0 && (
         <div className="space-y-4">
           <h3 className="font-bold text-slate-700">🌱 Recommended Plants</h3>

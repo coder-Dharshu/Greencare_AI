@@ -8,12 +8,11 @@ import google.generativeai as genai
 from groq import Groq
 from dotenv import load_dotenv
 import base64
+from prompts import get_diagnosis_prompt, get_recommendation_prompt
 
-# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
 CORS(app)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -106,24 +105,7 @@ def diagnose():
         image_data = file.read()
         base64_image = base64.b64encode(image_data).decode('utf-8')
         
-        prompt = """
-        Analyze this image. Determine if it contains a plant. 
-        If it does, identify the plant species. 
-        Then, examine the plant for any signs of disease, pests, or nutritional deficiencies. 
-        Provide a diagnosis, confidence score (0-1), and detailed treatment steps if issues are found. 
-        If healthy, provide maintenance tips as 'preventativeMeasures'.
-        
-        Return the response as valid JSON with this structure:
-        {
-            "isPlant": boolean,
-            "plantName": string,
-            "healthStatus": "healthy" | "diseased" | "unknown",
-            "diagnosis": string,
-            "confidence": float,
-            "treatment": [string],
-            "preventativeMeasures": [string]
-        }
-        """
+        prompt = get_diagnosis_prompt()
 
         completion = groq_client.chat.completions.create(
             model="meta-llama/llama-4-scout-17b-16e-instruct",
@@ -145,7 +127,6 @@ def diagnose():
         )
         
         text = completion.choices[0].message.content
-        print(f"Diagnosis response: {text[:200]}")
         return jsonify(json.loads(text))
 
     except Exception as e:
@@ -153,41 +134,24 @@ def diagnose():
         return jsonify({'error': str(e)}), 500
 @app.route('/api/recommend', methods=['POST'])
 def recommend():
-    print("DEBUG: HITTING RECOMMEND ENDPOINT")
     if not groq_client:
         return jsonify({'error': 'Groq API client not initialized. Check GROQ_API_KEY.'}), 500
 
     try:
         criteria = request.json
-        prompt = f"""
-        Act as an expert Indian botanist. Suggest 5 plants strictly suitable for a home balcony garden in {criteria.get('location')}.
-        
-        User Preferences:
-        - Environment: {criteria.get('environment')}
-        - Light Level: {criteria.get('lightLevel')}
-        - Maintenance: {criteria.get('maintenance')}
-        - Pet Safe: {criteria.get('petSafe')}
-        - Notes: {criteria.get('notes')}
-        
-        Return a JSON array of objects with this structure:
-        {{
-            "recommendations": [
-                {{
-                    "name": string,
-                    "scientificName": string,
-                    "description": string,
-                    "waterNeeds": string,
-                    "lightNeeds": string,
-                    "difficulty": string
-                }}
-            ]
-        }}
-        """
+        prompt = get_recommendation_prompt(
+            location=criteria.get('location', 'India'),
+            environment=criteria.get('environment', ''),
+            light_level=criteria.get('lightLevel', ''),
+            maintenance=criteria.get('maintenance', ''),
+            pet_safe=criteria.get('petSafe', False),
+            notes=criteria.get('notes', '')
+        )
         
         completion = groq_client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": "You are a helpful expert botanist that provides responses in JSON format."},
+                {"role": "system", "content": "You are a botanical expert that provides responses in JSON format."},
                 {"role": "user", "content": prompt}
             ],
             response_format={"type": "json_object"}
@@ -198,8 +162,6 @@ def recommend():
         return jsonify(recommendations)
 
     except json.JSONDecodeError as e:
-        print(f"JSON decode error in recommendations: {e}")
-        print(f"Attempted to parse: {text[:500] if 'text' in locals() else 'N/A'}")
         return jsonify({'error': f'Failed to parse AI response as JSON: {str(e)}'}), 500
 
     except Exception as e:

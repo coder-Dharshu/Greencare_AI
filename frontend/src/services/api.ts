@@ -18,7 +18,6 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-// --- Plants (Garden CRUD) ---
 export const getPlants = () => apiFetch<Plant[]>('/api/plants');
 
 export const addPlant = (plant: Omit<Plant, 'id'>) =>
@@ -30,10 +29,8 @@ export const updatePlant = (plant: Plant) =>
 export const removePlant = (id: string) =>
   apiFetch<{ status: string }>(`/api/plants/${id}`, { method: 'DELETE' });
 
-// --- Reminders ---
 export const getReminders = () => apiFetch<WateringReminder[]>('/api/reminders');
 
-// --- Disease Diagnosis ---
 export const diagnosePlant = async (file: File): Promise<DiseaseAnalysis> => {
   const formData = new FormData();
   formData.append('file', file);
@@ -42,25 +39,21 @@ export const diagnosePlant = async (file: File): Promise<DiseaseAnalysis> => {
   return res.json();
 };
 
-// --- AI Recommendations ---
 export const getRecommendations = (criteria: RecommendationRequest) =>
   apiFetch<PlantRecommendation[]>('/api/recommend', {
     method: 'POST', body: JSON.stringify(criteria)
   });
 
-// --- Soil-based ML Prediction ---
 export const predictBysoil = (data: SoilPredictionRequest) =>
   apiFetch<{ predictions: PlantPrediction[] }>('/api/predict', {
     method: 'POST', body: JSON.stringify(data)
   });
 
-// --- SHAP Explanation ---
 export const explainPrediction = (data: SoilPredictionRequest) =>
   apiFetch<PredictionExplanation>('/api/explain', {
     method: 'POST', body: JSON.stringify(data)
   });
 
-// --- User Profile ---
 export const getProfile = () => apiFetch<UserProfile>('/api/profile');
 
 export const updateProfile = (profile: UserProfile) =>
