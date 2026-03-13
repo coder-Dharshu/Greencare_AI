@@ -65,14 +65,12 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({ onAd
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          // Reverse geocoding using OpenStreetMap Nominatim API
           const response = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
           );
           const data = await response.json();
 
           const address = data.address;
-          // Construct a location string focusing on City/Region + Country
           const city = address.city || address.town || address.village || address.state_district;
           const state = address.state;
           const country = address.country;
@@ -157,14 +155,13 @@ export const RecommendationEngine: React.FC<RecommendationEngineProps> = ({ onAd
     }
     setLoading(true);
     setError(null);
-    setExpandedIndex(null); // Reset expansion on new search
-    setPlantImages({}); // Clear old images
-    setAddedPlants(new Set()); // Reset added status
+    setExpandedIndex(null);
+    setPlantImages({});
+    setAddedPlants(new Set());
 
     try {
       const results = await getPlantRecommendations(preferences);
       setRecommendations(results);
-      // Fetch images after getting the plant list
       await fetchPlantImages(results);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch recommendations");

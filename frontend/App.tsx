@@ -4,6 +4,7 @@ import { Garden } from './components/Garden';
 import { DiseaseDetector } from './components/DiseaseDetector';
 import { RecommendationEngine } from './components/RecommendationEngine';
 import { Home } from './components/Home';
+import { useWateringNotifications } from './components/useWateringNotifications';
 import { ViewState, Plant } from './types';
 import { getPlants, addPlant, removePlant, updatePlant } from './services/api';
 
@@ -12,10 +13,11 @@ const App: React.FC = () => {
   const [plants, setPlants] = useState<Plant[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load plants on mount
   useEffect(() => {
     loadGarden();
   }, []);
+
+  useWateringNotifications(plants);
 
   const loadGarden = async () => {
     try {
@@ -30,12 +32,6 @@ const App: React.FC = () => {
 
   const handleAddPlant = async (newPlant: Plant) => {
     try {
-      // Optimistic update or wait for server? Let's wait for server to get real ID if needed, 
-      // but here we might want to just send the data.
-      // note: id generation is now on backend or frontend? 
-      // Backend generates ID if we use the backend AddPlant logic I wrote.
-      // Let's adjust to pass plant data without ID if backend generates it, 
-      // or just pass it all. My backend code generates a new UUID.
       const savedPlant = await addPlant(newPlant);
       setPlants(prev => [...prev, savedPlant]);
     } catch (error) {
@@ -69,7 +65,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <Layout currentView={currentView} onNavigate={setCurrentView}>
+    <Layout currentView={currentView} onNavigate={setCurrentView} plants={plants} onUpdatePlant={handleUpdatePlant}>
       {currentView === 'home' && (
         <Home onNavigate={setCurrentView} plants={plants} />
       )}

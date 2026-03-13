@@ -5,24 +5,30 @@ from datetime import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import google.generativeai as genai
+from groq import Groq
 from dotenv import load_dotenv
+import base64
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
-
-# --- CONFIGURATION ---
+CORS(app)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
+
+groq_client = None
+if GROQ_API_KEY:
+    groq_client = Groq(api_key=GROQ_API_KEY)
 else:
-    print("⚠️ WARNING: GEMINI_API_KEY not found in environment variables.")
+    print("⚠️ WARNING: GROQ_API_KEY not found in environment variables.")
 
 DATA_FILE = "plants.json"
 
-# --- HELPER FUNCTIONS ---
 def load_plants():
     if not os.path.exists(DATA_FILE):
         return []
@@ -36,13 +42,9 @@ def save_plants(plants):
     with open(DATA_FILE, 'w') as f:
         json.dump(plants, f, indent=2)
 
-# --- API ENDPOINTS ---
-
 @app.route('/', methods=['GET'])
 def home():
     return "Greencare AI Backend is Running!"
-
-# 1. Garden Management endpoints
 @app.route('/api/plants', methods=['GET'])
 def get_plants():
     return jsonify(load_plants())
@@ -87,10 +89,11 @@ def update_plant(plant_id):
         save_plants(plants)
         return jsonify(updated_plant)
     return jsonify({"error": "Plant not found"}), 404
-
-# 2. Disease Detection (Gemini Vision)
 @app.route('/api/diagnose', methods=['POST'])
 def diagnose():
+    if not groq_client:
+        return jsonify({'error': 'Groq API client not initialized. Check GROQ_API_KEY.'}), 500
+
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
     
@@ -99,11 +102,9 @@ def diagnose():
         return jsonify({'error': 'Empty file'}), 400
 
     try:
-        # Read file data directly
+        # Read and encode file data
         image_data = file.read()
-        
-        # Prepare content for Gemini
-        model = genai.GenerativeModel('models/gemini-2.5-flash')
+        base64_image = base64.b64encode(image_data).decode('utf-8')
         
         prompt = """
         Analyze this image. Determine if it contains a plant. 
@@ -124,48 +125,40 @@ def diagnose():
         }
         """
 
-        response = model.generate_content([
-            {'mime_type': file.content_type, 'data': image_data},
-            prompt
-        ])
+        completion = groq_client.chat.completions.create(
+            model="meta-llama/llama-4-scout-17b-16e-instruct",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{file.content_type};base64,{base64_image}",
+                            },
+                        },
+                    ],
+                }
+            ],
+            response_format={"type": "json_object"}
+        )
         
-        # Extract JSON from response
-        text = response.text.strip()
-        print(f"Diagnosis response (first 200 chars): {text[:200]}")
-        
-        # Remove markdown code blocks if present
-        if '```json' in text:
-            text = text.split('```json')[1].split('```')[0].strip()
-        elif '```' in text:
-            # Try to find JSON within any code block
-            parts = text.split('```')
-            for part in parts:
-                part = part.strip()
-                if part.startswith('{') or part.startswith('['):
-                    text = part
-                    break
-        
-        # If response doesn't start with { or [, try to find JSON
-        if not text.startswith(('{', '[')):
-            import re
-            json_match = re.search(r'[\[{].*[\]}]', text, re.DOTALL)
-            if json_match:
-                text = json_match.group(0)
-            
-        print(f"Cleaned JSON (first 200 chars): {text[:200]}")
+        text = completion.choices[0].message.content
+        print(f"Diagnosis response: {text[:200]}")
         return jsonify(json.loads(text))
 
     except Exception as e:
         print(f"Error in diagnosis: {e}")
         return jsonify({'error': str(e)}), 500
-
-# 3. Recommendations (Gemini Pro)
 @app.route('/api/recommend', methods=['POST'])
 def recommend():
+    print("DEBUG: HITTING RECOMMEND ENDPOINT")
+    if not groq_client:
+        return jsonify({'error': 'Groq API client not initialized. Check GROQ_API_KEY.'}), 500
+
     try:
         criteria = request.json
-        model = genai.GenerativeModel('models/gemini-2.5-flash')
-        
         prompt = f"""
         Act as an expert Indian botanist. Suggest 5 plants strictly suitable for a home balcony garden in {criteria.get('location')}.
         
@@ -177,45 +170,32 @@ def recommend():
         - Notes: {criteria.get('notes')}
         
         Return a JSON array of objects with this structure:
-        [
-            {{
-                "name": string,
-                "scientificName": string,
-                "description": string,
-                "waterNeeds": string,
-                "lightNeeds": string,
-                "difficulty": string
-            }}
-        ]
+        {{
+            "recommendations": [
+                {{
+                    "name": string,
+                    "scientificName": string,
+                    "description": string,
+                    "waterNeeds": string,
+                    "lightNeeds": string,
+                    "difficulty": string
+                }}
+            ]
+        }}
         """
         
-        response = model.generate_content(prompt)
+        completion = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": "You are a helpful expert botanist that provides responses in JSON format."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"}
+        )
         
-        # Extract JSON from response
-        text = response.text.strip()
-        print(f"Recommendation response (first 200 chars): {text[:200]}")
-        
-        # Remove markdown code blocks if present
-        if '```json' in text:
-            text = text.split('```json')[1].split('```')[0].strip()
-        elif '```' in text:
-            # Try to find JSON within any code block
-            parts = text.split('```')
-            for part in parts:
-                part = part.strip()
-                if part.startswith('{') or part.startswith('['):
-                    text = part
-                    break
-        
-        # If response doesn't start with { or [, try to find JSON
-        if not text.startswith(('{', '[')):
-            import re
-            json_match = re.search(r'[\[{].*[\]}]', text, re.DOTALL)
-            if json_match:
-                text = json_match.group(0)
-        
-        print(f"Cleaned JSON (first 200 chars): {text[:200]}")
-        return jsonify(json.loads(text))
+        data = json.loads(completion.choices[0].message.content)        
+        recommendations = data.get("recommendations", [])
+        return jsonify(recommendations)
 
     except json.JSONDecodeError as e:
         print(f"JSON decode error in recommendations: {e}")
@@ -227,5 +207,5 @@ def recommend():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5005, debug=True)
 

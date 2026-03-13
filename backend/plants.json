@@ -1,0 +1,42 @@
+[
+  {
+    "id": "9a984db0-df19-4fc2-bff0-7731f2952211",
+    "name": "Peace Lily",
+    "species": "Spathiphyllum wallisii",
+    "location": "Indoor",
+    "waterScheduleDays": 7,
+    "lastWatered": "2026-03-11T15:39:36.872Z",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Peace_lily_-_1_-_cropped.jpg/960px-Peace_lily_-_1_-_cropped.jpg",
+    "notes": "Difficulty: Medium. Light: Medium. Water: Moderate"
+  },
+  {
+    "id": "44882edd-1697-48ab-abe6-3e4de0712f4b",
+    "name": "Philodendron",
+    "species": "Philodendron spp.",
+    "location": "Indoor",
+    "waterScheduleDays": 7,
+    "lastWatered": "2026-03-11T15:39:40.130Z",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Philodendron_giganteum_-_Laeken_Royal_Greenhouses_-_Royal_Castle_of_Laeken_-_Brussels%2C_Belgium_-_DSC07236.jpg/960px-Philodendron_giganteum_-_Laeken_Royal_Greenhouses_-_Royal_Castle_of_Laeken_-_Brussels%2C_Belgium_-_DSC07236.jpg",
+    "notes": "Difficulty: Medium. Light: Medium. Water: Moderate"
+  },
+  {
+    "id": "e50a0512-3835-4bfc-8833-474024a92507",
+    "name": "Peace Lily",
+    "species": "Spathiphyllum wallisii",
+    "location": "Indoor",
+    "waterScheduleDays": 7,
+    "lastWatered": "2026-03-12T07:15:53.290Z",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Peace_lily_-_1_-_cropped.jpg/960px-Peace_lily_-_1_-_cropped.jpg",
+    "notes": "Difficulty: Medium. Light: Medium. Water: Moderate"
+  },
+  {
+    "id": "370ac8ee-dddf-4cd2-9b37-7b7f5de10eeb",
+    "name": "Indian Borage",
+    "species": "Plectranthus amboinicus",
+    "location": "Indoor",
+    "waterScheduleDays": 7,
+    "lastWatered": "2026-03-13T06:47:03.898Z",
+    "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Leaf_-pani_koorkka.JPG/960px-Leaf_-pani_koorkka.JPG",
+    "notes": "Difficulty: Medium, requires occasional pinching. Light: Medium, indirect light. Water: Infrequent watering, as it's drought-tolerant"
+  }
+]

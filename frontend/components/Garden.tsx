@@ -18,7 +18,6 @@ export const Garden: React.FC<GardenProps> = ({ plants, onAddPlant, onRemovePlan
     waterScheduleDays: 7,
   });
 
-  // Calculate status
   const getStatus = (plant: Plant) => {
     const last = new Date(plant.lastWatered);
     const next = new Date(last);
@@ -79,7 +78,6 @@ export const Garden: React.FC<GardenProps> = ({ plants, onAddPlant, onRemovePlan
   return (
     <div className="py-8 space-y-12">
       
-      {/* Water Reminders Banner */}
       {plantsNeedingWater.length > 0 && (
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -99,7 +97,6 @@ export const Garden: React.FC<GardenProps> = ({ plants, onAddPlant, onRemovePlan
                 Mark All Watered
               </button>
            </div>
-           {/* Decorative */}
            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
         </div>
       )}
